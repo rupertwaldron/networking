@@ -2,6 +2,7 @@ package com.ruppyrup.chatter;
 
 //Here’s an old client cobbled together in 2002, using Swing.
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -9,12 +10,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import java.awt.BorderLayout;
-import javax.swing.JFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
+import javax.swing.*;
+import javax.swing.text.*;
 
 /**
  * A simple Swing-based client for the chat server. Graphically it is a frame with a text
@@ -30,12 +27,14 @@ import javax.swing.JTextField;
  */
 public class ChatClient {
 
-    String serverAddress;
-    Scanner in;
-    PrintWriter out;
-    JFrame frame = new JFrame("Chatter");
-    JTextField textField = new JTextField(50);
-    JTextArea messageArea = new JTextArea(16, 50);
+    private String serverAddress;
+    private Scanner in;
+    private PrintWriter out;
+    private  JFrame frame;
+    private JTextField textField;
+    private JTextPane messageArea;
+    private StyledDocument document;
+    private Style style;
 
     /**
      * Constructs the client by laying out the GUI and registering a listener with the
@@ -46,20 +45,7 @@ public class ChatClient {
      */
     public ChatClient(String serverAddress) {
         this.serverAddress = serverAddress;
-
-        textField.setEditable(false);
-        messageArea.setEditable(false);
-        frame.getContentPane().add(textField, BorderLayout.SOUTH);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
-        frame.pack();
-
-        // Send on enter then clear to prepare for next message
-        textField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                out.println(textField.getText());
-                textField.setText("");
-            }
-        });
+        setupFrame();
     }
 
     private String getName() {
@@ -71,21 +57,36 @@ public class ChatClient {
         );
     }
 
-    private void run() throws IOException {
-        try {
-            var socket = new Socket(serverAddress, 59001);
+    private void run() throws IOException, BadLocationException {
+        try(var socket = new Socket(serverAddress, 59001)) {
             in = new Scanner(socket.getInputStream());
             out = new PrintWriter(socket.getOutputStream(), true);
 
             while (in.hasNextLine()) {
                 var line = in.nextLine();
-                if (line.startsWith("SUBMITNAME")) {
-                    out.println(getName());
-                } else if (line.startsWith("NAMEACCEPTED")) {
-                    this.frame.setTitle("Chatter - " + line.substring(13));
-                    textField.setEditable(true);
-                } else if (line.startsWith("MESSAGE")) {
-                    messageArea.append(line.substring(8) + "\n");
+
+                var command = line.substring(0, 10);
+                System.out.println(command);
+                switch (command) {
+                    case "SUBMITNAME": {
+                        out.println(getName());
+                        break;
+                    }
+                    case "NAMEACCEPT": {
+                        this.frame.setTitle("Chatter - " + line.substring(11));
+                        textField.setEditable(true);
+                        break;
+                    }
+                    case "MESSAGEGOO" : {
+                        StyleConstants.setForeground(style, Color.BLUE);
+                        document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        break;
+                    }
+                    case "INFOMATION" : {
+                        StyleConstants.setForeground(style, Color.RED);
+                        document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        break;
+                    }
                 }
             }
         } finally {
@@ -103,5 +104,26 @@ public class ChatClient {
         client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         client.frame.setVisible(true);
         client.run();
+    }
+
+    private void setupFrame() {
+        frame = new JFrame("Chatter");
+        textField = new JTextField(50);
+        messageArea = new JTextPane();
+        document = messageArea.getStyledDocument();
+        style = messageArea.addStyle("style1", null);
+        textField.setEditable(false);
+        messageArea.setEditable(false);
+        messageArea.setText("You are now in the chat room... \n");
+        frame.getContentPane().add(textField, BorderLayout.SOUTH);
+        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
+        frame.pack();
+
+
+        // Send on enter then clear to prepare for next message
+        textField.addActionListener(e -> {
+            out.println(textField.getText());
+            textField.setText("");
+        });
     }
 }

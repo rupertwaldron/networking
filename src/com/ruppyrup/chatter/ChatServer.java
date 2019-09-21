@@ -26,7 +26,7 @@ public class ChatServer {
     private static final Set<String> names = new HashSet<>();
 
     // The set of all the print writers for all the clients, used for broadcast.
-    private static Set<PrintWriter> writers = new HashSet<>();
+    private static final Set<PrintWriter> writers = new HashSet<>();
 
     public static void main(String[] args) throws Exception {
         System.out.println("The chat server is running...");
@@ -85,9 +85,9 @@ public class ChatServer {
                 // Now that a successful name has been chosen, add the socket's print writer
                 // to the set of all writers so this client can receive broadcast messages.
                 // But BEFORE THAT, let everyone else know that the new person has joined!
-                out.println("NAMEACCEPTED " + name);
+                out.println("NAMEACCEPT " + name);
                 for (PrintWriter writer : writers) {
-                    writer.println("MESSAGE " + name + " has joined");
+                    writer.println("INFOMATION " + name + " has joined");
                 }
                 writers.add(out); // add a new writter
 
@@ -98,7 +98,7 @@ public class ChatServer {
                         return;
                     }
                     for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + name + ": " + input);
+                        writer.println("MESSAGEGOO " + name + ": " + input);
                     }
                 }
             } catch (Exception e) {
@@ -111,7 +111,7 @@ public class ChatServer {
                     System.out.println(name + " is leaving");
                     names.remove(name);
                     for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + name + " has left");
+                        writer.println("INFOMATION " + name + " has left");
                     }
                 }
                 try { socket.close(); } catch (IOException e) {}
