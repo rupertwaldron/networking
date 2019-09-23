@@ -1,17 +1,17 @@
-package com.ruppyrup.chatter;
+package com.ruppyrup;
 
 //Here’s an old client cobbled together in 2002, using Swing.
 
+import javax.swing.*;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Style;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
-
-import javax.swing.*;
-import javax.swing.text.*;
 
 /**
  * A simple Swing-based client for the chat server. Graphically it is a frame with a text
@@ -30,7 +30,7 @@ public class ChatClient {
     private String serverAddress;
     private Scanner in;
     private PrintWriter out;
-    private  JFrame frame;
+    private JFrame frame;
     private JTextField textField;
     private JTextPane messageArea;
     private StyledDocument document;
@@ -118,7 +118,6 @@ public class ChatClient {
         frame.getContentPane().add(textField, BorderLayout.SOUTH);
         frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
         frame.pack();
-
 
         // Send on enter then clear to prepare for next message
         textField.addActionListener(e -> {
