@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -35,6 +36,8 @@ public class ChatServer {
             while (true) {
                 pool.execute(new Handler(listener.accept()));
             }
+        } catch (NoSuchElementException e) {
+            System.out.println("Socket lost: " + e);
         }
     }
 
@@ -114,7 +117,11 @@ public class ChatServer {
                         writer.println("INFOMATION " + name + " has left");
                     }
                 }
-                try { socket.close(); } catch (IOException e) {}
+                try {
+                    socket.close();
+                } catch (IOException e) {
+                    System.out.println("Can't close socket: " + e);
+                }
             }
         }
     }

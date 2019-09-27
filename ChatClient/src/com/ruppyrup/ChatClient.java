@@ -11,6 +11,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -32,9 +33,17 @@ public class ChatClient {
     private PrintWriter out;
     private JFrame frame;
     private JTextField textField;
-    private JTextPane messageArea;
+    private JTextPane textPane;
     private StyledDocument document;
     private Style style;
+    private Map<Character, Color> colorMap = Map.of(
+        'b', Color.BLUE,
+        'r', Color.RED,
+        'o', Color.ORANGE,
+        'g', Color.GREEN,
+        'y', Color.YELLOW,
+        'p', Color.PINK
+    );
 
     /**
      * Constructs the client by laying out the GUI and registering a listener with the
@@ -79,7 +88,16 @@ public class ChatClient {
                     }
                     case "MESSAGEGOO" : {
                         StyleConstants.setForeground(style, Color.BLUE);
-                        document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        int colorMarker = line.indexOf('^');
+                        if (colorMarker != -1) {
+                            document.insertString(document.getLength(), line.substring(11, colorMarker), style);
+                            char color = line.charAt(colorMarker + 1);
+                            StyleConstants.setForeground(style, colorMap.get(color));
+                            document.insertString(document.getLength(), line.substring(colorMarker + 2) + "\n", style);
+
+                        } else {
+                            document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        }
                         break;
                     }
                     case "INFOMATION" : {
@@ -109,15 +127,19 @@ public class ChatClient {
     private void setupFrame() {
         frame = new JFrame("Chatter");
         textField = new JTextField(50);
-        messageArea = new JTextPane();
-        document = messageArea.getStyledDocument();
-        style = messageArea.addStyle("style1", null);
+        textPane = new JTextPane();
+        document = textPane.getStyledDocument();
+        style = textPane.addStyle("style1", null);
         textField.setEditable(false);
-        messageArea.setEditable(false);
-        messageArea.setText("You are now in the chat room... \n");
+        textPane.setEditable(false);
+        textPane.setText("You are now in the chat room... \n");
+        textPane.setPreferredSize(new Dimension(300, 300));
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.add(textPane);
         frame.getContentPane().add(textField, BorderLayout.SOUTH);
-        frame.getContentPane().add(new JScrollPane(messageArea), BorderLayout.CENTER);
+        frame.getContentPane().add(new JScrollPane(textPane), BorderLayout.CENTER);
         frame.pack();
+        frame.setVisible(true);
 
         // Send on enter then clear to prepare for next message
         textField.addActionListener(e -> {
