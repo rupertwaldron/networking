@@ -26,6 +26,7 @@ import java.util.function.Consumer;
  * sending the server arbitrary strings to be broadcast to all chatters connected to the
  * server. When the server sends a line beginning with "MESSAGE" then all characters
  * following this string should be displayed in its message area.
+ * new text added!!!
  */
 public class ChatClient {
 
