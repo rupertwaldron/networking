@@ -13,6 +13,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.function.Consumer;
 
 /**
  * A simple Swing-based client for the chat server. Graphically it is a frame with a text
@@ -44,6 +45,7 @@ public class ChatClient {
         'y', Color.YELLOW,
         'p', Color.PINK
     );
+    private Consumer<String> processColorStrings;
 
     /**
      * Constructs the client by laying out the GUI and registering a listener with the
@@ -87,23 +89,23 @@ public class ChatClient {
                         break;
                     }
                     case "MESSAGEGOO" : {
-                        StyleConstants.setForeground(style, Color.BLUE);
-                        int colorMarker = line.indexOf('^');
-                        if (colorMarker != -1) {
-                            document.insertString(document.getLength(), line.substring(11, colorMarker), style);
-                            char color = line.charAt(colorMarker + 1);
-                            StyleConstants.setForeground(style, colorMap.get(color));
-                            document.insertString(document.getLength(), line.substring(colorMarker + 2) + "\n", style);
+                        int startOfSubString = 11;
+                        String stringToAdd = line.substring(startOfSubString);
 
-                        } else {
-                            document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        if (!stringToAdd .contains("^")) {
+                            sendChatter(Color.BLUE, stringToAdd + "\n");
+                            break;
                         }
+
+                        processColor(stringToAdd);
                         break;
                     }
                     case "INFOMATION" : {
-                        StyleConstants.setForeground(style, Color.RED);
-                        document.insertString(document.getLength(), line.substring(11) + "\n", style);
+                        sendChatter(Color.RED, line.substring(11) + "\n");
                         break;
+                    }
+                    default: {
+                        sendChatter(Color.magenta, "Something has gone wrong\n");
                     }
                 }
             }
@@ -111,6 +113,31 @@ public class ChatClient {
             frame.setVisible(false);
             frame.dispose();
         }
+    }
+
+    private void processColor(String stringToAdd) throws BadLocationException {
+        String[] splitString = stringToAdd.split("\\^");
+
+        boolean isId = true;
+        for (String subString : splitString) {
+            Color textColor = Color.BLUE;
+            if (isId) {
+                sendChatter(textColor, subString);
+                isId = false;
+                continue;
+            }
+            char color = subString.charAt(0);
+            if (colorMap.containsKey(color)) {
+                textColor = colorMap.get(color);
+            }
+            sendChatter(textColor, subString.substring(1));
+        }
+        document.insertString(document.getLength(), "\n", style);
+    }
+
+    private void sendChatter(Color blue, String s) throws BadLocationException {
+        StyleConstants.setForeground(style, blue);
+        document.insertString(document.getLength(), s, style);
     }
 
     public static void main(String[] args) throws Exception {
