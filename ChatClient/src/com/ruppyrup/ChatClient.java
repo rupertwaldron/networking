@@ -11,6 +11,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.function.Consumer;
@@ -69,7 +70,7 @@ public class ChatClient {
         );
     }
 
-    private void run() throws IOException, BadLocationException {
+    private void run() throws IOException {
         try(var socket = new Socket(serverAddress, 59001)) {
             in = new Scanner(socket.getInputStream());
             out = new PrintWriter(socket.getOutputStream(), true);
@@ -91,14 +92,13 @@ public class ChatClient {
                     }
                     case "MESSAGEGOO" : {
                         int startOfSubString = 11;
-                        String stringToAdd = line.substring(startOfSubString);
+                        String[] separateStrings = line.substring(startOfSubString).split("\\^");
+                        sendChatter(Color.BLUE, separateStrings[0]);
+                        String[] colorArray = Arrays.copyOfRange(separateStrings, 1, separateStrings.length);
 
-                        if (!stringToAdd .contains("^")) {
-                            sendChatter(Color.BLUE, stringToAdd + "\n");
-                            break;
-                        }
-
-                        processColor(stringToAdd);
+                        Arrays.stream(colorArray)
+                            .forEach(subString -> sendChatter(colorMap.getOrDefault(subString.charAt(0), Color.BLUE), subString.substring(1)));
+                        sendChatter(Color.BLUE, "\n");
                         break;
                     }
                     case "INFOMATION" : {
@@ -116,29 +116,13 @@ public class ChatClient {
         }
     }
 
-    private void processColor(String stringToAdd) throws BadLocationException {
-        String[] splitString = stringToAdd.split("\\^");
-
-        boolean isId = true;
-        for (String subString : splitString) {
-            Color textColor = Color.BLUE;
-            if (isId) {
-                sendChatter(textColor, subString);
-                isId = false;
-                continue;
-            }
-            char color = subString.charAt(0);
-            if (colorMap.containsKey(color)) {
-                textColor = colorMap.get(color);
-            }
-            sendChatter(textColor, subString.substring(1));
+    private void sendChatter(Color color, String s) {
+        StyleConstants.setForeground(style, color);
+        try {
+            document.insertString(document.getLength(), s, style);
+        } catch (BadLocationException e){
+            System.out.println("Bad location insert: " + e.getMessage());
         }
-        document.insertString(document.getLength(), "\n", style);
-    }
-
-    private void sendChatter(Color blue, String s) throws BadLocationException {
-        StyleConstants.setForeground(style, blue);
-        document.insertString(document.getLength(), s, style);
     }
 
     public static void main(String[] args) throws Exception {
