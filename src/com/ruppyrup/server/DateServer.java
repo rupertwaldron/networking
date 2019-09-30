@@ -1,9 +1,11 @@
 package com.ruppyrup.server;
 
+import com.ruppyrup.model.Message;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
-import java.util.Date;
+
+import static com.ruppyrup.model.MessageType.MESSAGE;
 
 public class DateServer {
 
@@ -12,8 +14,11 @@ public class DateServer {
             System.out.println("The date server is running...");
             while (true) {
                 try (var socket = listener.accept()) {
-                    var out = new PrintWriter(socket.getOutputStream(), true);
-                    out.println(new Date().toString());
+                    var out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(new Message(MESSAGE, "Hello World!"));;
+                    //out.writeObject(new Date());
+                   // var out = new PrintWriter(socket.getOutputStream(), true);
+                    //out.println(new Date().toString());
                     System.out.println("Hit by Socket: " + socket);
                 }
             }
